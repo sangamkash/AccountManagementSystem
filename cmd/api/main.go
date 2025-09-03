@@ -2,12 +2,17 @@ package main
 
 import (
 	"AccountManagementSystem/internal/handlers"
+	"AccountManagementSystem/internal/repository"
 	"AccountManagementSystem/internal/server"
+	"AccountManagementSystem/internal/services"
+	"AccountManagementSystem/log_color"
+	"AccountManagementSystem/log_helper"
 	"context"
 	"database/sql"
 	"fmt"
 	"github.com/pressly/goose/v3"
 	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"strconv"
@@ -74,9 +79,20 @@ func main() {
 }
 
 func initHandler(server *server.FiberServer) {
-	accountHandler := handlers.NewAccountHandler(server.DB())
-	server.RegisterAPIRoutes(accountHandler)
 
+	slog.Info(log_helper.LogServiceInitializing("account_System"))
+	accountRepo := repository.NewAccountRepo(server.DB())
+	accountService := services.NewAccountService(accountRepo)
+	accountHandler := handlers.NewAccountHandler(accountService)
+	server.RegisterAPIRoutes(accountHandler)
+	slog.Info(log_helper.LogServiceInitialized("account_System"))
+	slog.Info(log_color.Black("===================================="))
+	slog.Info(log_helper.LogServiceInitializing("transaction_System"))
+	transactionRepo := repository.NewTransactionRepo(server.DB())
+	transactionService := services.NewTransactionService(accountRepo, transactionRepo)
+	transactionHandler := handlers.NewTransactionHandler(transactionService)
+	server.RegisterAPIRoutes(transactionHandler)
+	slog.Info(log_helper.LogServiceInitialized("transaction_System"))
 }
 
 func initGoose() {
@@ -87,7 +103,6 @@ func initGoose() {
 		log.Fatal(err)
 	}
 	defer db.Close()
-
 	if err := goose.UpContext(context.Background(), db, "internal/database/migrations"); err != nil {
 		log.Fatal(err)
 	}

@@ -15,21 +15,18 @@ var ErrInsufficient = errors.New("insufficient funds")
 type TransactionService struct {
 	accRepo *repository.AccountRepo
 	txRepo  *repository.TransactionRepo
-	rb      *queue.Rabbit
 }
 
-func NewTransactionService(a *repository.AccountRepo, t *repository.TransactionRepo, r *queue.Rabbit) *TransactionService {
-	return &TransactionService{accRepo: a, txRepo: t, rb: r}
+func NewTransactionService(a *repository.AccountRepo, t *repository.TransactionRepo) *TransactionService {
+	return &TransactionService{accRepo: a, txRepo: t}
 }
 
 func (s *TransactionService) EnqueueDeposit(accountID int64, amount float64, key string) error {
-	msg := queue.TransactionMessage{AccountID: accountID, Type: "deposit", Amount: amount, IdempotencyKey: key}
-	return s.rb.Publish(context.Background(), msg)
+	return nil
 }
 
 func (s *TransactionService) EnqueueWithdraw(accountID int64, amount float64, key string) error {
-	msg := queue.TransactionMessage{AccountID: accountID, Type: "withdraw", Amount: amount, IdempotencyKey: key}
-	return s.rb.Publish(context.Background(), msg)
+	return nil
 }
 
 func (s *TransactionService) List(accountID int64, limit int) ([]models.Transaction, error) {
@@ -38,7 +35,7 @@ func (s *TransactionService) List(accountID int64, limit int) ([]models.Transact
 	return s.txRepo.ListByAccount(ctx, accountID, limit)
 }
 
-// ProcessMessage is used by the processor to apply the transaction in a DB transaction
+// ProcessMessage is used by the processor to apply the transaction in a db transaction
 func (s *TransactionService) ProcessMessage(ctx context.Context, msg queue.TransactionMessage) error {
 	tx, err := s.accRepo.DB.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {

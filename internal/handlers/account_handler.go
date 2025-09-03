@@ -4,17 +4,16 @@ import (
 	"AccountManagementSystem/api_routers"
 	"AccountManagementSystem/internal/requestData"
 	"AccountManagementSystem/internal/services"
-	"database/sql"
 	"github.com/gofiber/fiber/v2"
 	"strconv"
 )
 
 type AccountHandler struct {
-	accountService *services.AccountService
+	service *services.AccountService
 }
 
-func NewAccountHandler(db *sql.DB) *AccountHandler {
-	return &AccountHandler{accountService: services.NewAccountService(db)}
+func NewAccountHandler(accountService *services.AccountService) *AccountHandler {
+	return &AccountHandler{service: accountService}
 }
 
 // CreateAccount godoc
@@ -49,7 +48,7 @@ func (a AccountHandler) CreateAccount(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&req); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "improper request body"})
 	}
-	account, err := a.accountService.Create(ctx.Context(), req.Username, req.InitialAmount)
+	account, err := a.service.Create(ctx.Context(), req.Username, req.InitialAmount)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -75,7 +74,7 @@ func (a AccountHandler) GetAccount(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
 	}
-	data, err := a.accountService.Get(ctx.Context(), id)
+	data, err := a.service.Get(ctx.Context(), id)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}

@@ -10,11 +10,11 @@ const (
 	colorReset   = "\033[0m"
 )
 
-func LogServiceStarting(s string) string {
-	return colorYellow + "=====starting ::" + s + " ::starting======" + colorReset
+func LogServiceInitializing(s string) string {
+	return colorYellow + "=====initialized ::" + s + " ::starting======" + colorReset
 }
-func LogServiceStarted(s string) string {
-	return colorGreen + "=====started ::" + s + " ::successfully======" + colorReset
+func LogServiceInitialized(s string) string {
+	return colorGreen + "=====initialized ::" + s + " ::successfully======" + colorReset
 }
 func LogServiceFailToStarted(s string) string {
 	return colorRed + "=====fail to start ::" + s + " :: fail!!!======" + colorReset
