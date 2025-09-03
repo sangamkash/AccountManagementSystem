@@ -30,7 +30,7 @@ func NewAccountHandler(db *sql.DB) *AccountHandler {
 func (a AccountHandler) GetFiberRoutes() *[]api_routers.APIRoute {
 	return &[]api_routers.APIRoute{
 		{"/v1/accounts", api_routers.POST, a.CreateAccount, 3000},
-		{"/v1/accounts/id:", api_routers.GET, a.GetAccount, 3000},
+		{"/v1/accounts/:id", api_routers.GET, a.GetAccount, 3000},
 	}
 }
 
@@ -77,7 +77,7 @@ func (a AccountHandler) GetAccount(ctx *fiber.Ctx) error {
 	}
 	data, err := a.accountService.Get(ctx.Context(), id)
 	if err != nil {
-		return err
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 	return ctx.JSON(fiber.Map{"msg": "successfully retrieved account", "data": data})
 }
