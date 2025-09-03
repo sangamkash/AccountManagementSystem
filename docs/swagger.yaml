@@ -1,0 +1,21 @@
+info:
+  contact: {}
+  description: API for Account Management system
+  title: AccountManagementSystem
+  version: "1.0"
+paths:
+  /health:
+    get:
+      description: Returns the health status of the database/server
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Health check
+      tags:
+      - health
+swagger: "2.0"
