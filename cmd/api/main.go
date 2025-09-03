@@ -1,6 +1,7 @@
 package main
 
 import (
+	"AccountManagementSystem/internal/handlers"
 	"AccountManagementSystem/internal/server"
 	"context"
 	"database/sql"
@@ -51,6 +52,7 @@ func main() {
 	server := server.New()
 
 	server.RegisterFiberRoutes()
+	initHandler(server)
 	//initGoose()
 	// Create a done channel to signal when the shutdown is complete
 	done := make(chan bool, 1)
@@ -69,6 +71,12 @@ func main() {
 	// Wait for the graceful shutdown to complete
 	<-done
 	log.Println("Graceful shutdown complete.")
+}
+
+func initHandler(server *server.FiberServer) {
+	accountHandler := handlers.NewAccountHandler(server.DB())
+	server.RegisterAPIRoutes(accountHandler)
+
 }
 
 func initGoose() {

@@ -72,7 +72,7 @@ func (s *FiberServer) RegisterAPIRoutes(apiService api_routers.IAPIService) {
 			slog.Info(log_color.BrightMagenta(route.Method.String()) + ":" + log_color.Pink(route.Path))
 			break
 		case api_routers.DELETE:
-			s.App.Delete(route.Path)
+			s.App.Delete(route.Path, handler)
 			slog.Info(log_color.BrightRed(route.Method.String()) + ":" + log_color.Pink(route.Path))
 			break
 		case api_routers.HEAD:

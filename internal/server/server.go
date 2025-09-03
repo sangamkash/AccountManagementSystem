@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"github.com/gofiber/fiber/v2"
 
 	"AccountManagementSystem/internal/database"
@@ -23,4 +24,8 @@ func New() *FiberServer {
 	}
 
 	return server
+}
+
+func (s *FiberServer) DB() *sql.DB {
+	return s.db.DB()
 }

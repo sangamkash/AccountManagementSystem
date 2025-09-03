@@ -58,3 +58,10 @@ Clean up binary from the last build:
 ```bash
 make clean
 ```
+
+
+error handling notes:
+- In case it show "TCP 0.0.0.0:5432 -> 127.0.0.1:0: listen tcp 0.0.0.0:5432: bind: address already in use"
+   - first use this cmd on terminal "lsof -i :5432" or 
+   - if the above do not show up any result use this cmd on  terminal "sudo lsof -i :5432"
+   - then use first try this "kill -9 <pid>" if failed then this "sudo kill -9 <pid>" 

@@ -1,10 +1,12 @@
 package database
 
 import (
+	"AccountManagementSystem/log_color"
 	"context"
 	"database/sql"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"strconv"
 	"time"
@@ -22,6 +24,8 @@ type Service interface {
 	// Close terminates the database connection.
 	// It returns an error if the connection cannot be closed.
 	Close() error
+
+	DB() *sql.DB
 }
 
 type service struct {
@@ -43,11 +47,14 @@ func New() Service {
 	if dbInstance != nil {
 		return dbInstance
 	}
+
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&search_path=%s", username, password, host, port, database, schema)
+	slog.Info(log_color.Blue(connStr))
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
+	slog.Info(log_color.Green("Connected to database"))
 	dbInstance = &service{
 		db: db,
 	}
@@ -103,6 +110,10 @@ func (s *service) Health() map[string]string {
 	}
 
 	return stats
+}
+
+func (s *service) DB() *sql.DB {
+	return s.db
 }
 
 // Close closes the database connection.
