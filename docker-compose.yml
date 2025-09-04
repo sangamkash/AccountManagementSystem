@@ -79,6 +79,9 @@ services:
         KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
         KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
         KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+        # 🔇 Reduce logging noise
+        KAFKA_LOG4J_ROOT_LOGLEVEL: ERROR
+        KAFKA_LOG4J_LOGGERS: "kafka.controller=ERROR,kafka.server=ERROR,kafka.coordinator.group=ERROR,state.change.logger=ERROR"
       networks:
         - blueprint
 
