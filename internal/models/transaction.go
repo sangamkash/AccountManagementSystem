@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Transaction struct {
 	ID        int64     `json:"id" db:"id"`
@@ -8,4 +10,11 @@ type Transaction struct {
 	Type      string    `json:"type" db:"type"`
 	Amount    float64   `json:"amount" db:"amount"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
+}
+
+type TransactionMessage struct {
+	IdempotencyKey string  `json:"idempotency_key"`
+	AccountID      int64   `json:"account_id"`
+	Type           string  `json:"type"`
+	Amount         float64 `json:"amount"`
 }

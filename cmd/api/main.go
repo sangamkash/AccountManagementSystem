@@ -2,6 +2,8 @@ package main
 
 import (
 	"AccountManagementSystem/internal/handlers"
+	"AccountManagementSystem/internal/queue"
+	"AccountManagementSystem/internal/queue_processor"
 	"AccountManagementSystem/internal/repository"
 	"AccountManagementSystem/internal/server"
 	"AccountManagementSystem/internal/services"
@@ -80,19 +82,33 @@ func main() {
 
 func initHandler(server *server.FiberServer) {
 
+	slog.Info(log_helper.LogServiceInitializing("kafka producer"))
+	kafkaQueue, err := queue.NewKafkaQueue("localhost:9092", "transactions-topic")
+	if err != nil {
+		log.Fatal(err)
+	}
+	slog.Info(log_helper.LogServiceInitialized("kafka producer"))
+
+	slog.Info(log_color.Black("===================================="))
 	slog.Info(log_helper.LogServiceInitializing("account_System"))
 	accountRepo := repository.NewAccountRepo(server.DB())
 	accountService := services.NewAccountService(accountRepo)
 	accountHandler := handlers.NewAccountHandler(accountService)
 	server.RegisterAPIRoutes(accountHandler)
 	slog.Info(log_helper.LogServiceInitialized("account_System"))
+
 	slog.Info(log_color.Black("===================================="))
 	slog.Info(log_helper.LogServiceInitializing("transaction_System"))
 	transactionRepo := repository.NewTransactionRepo(server.DB())
-	transactionService := services.NewTransactionService(accountRepo, transactionRepo)
+	transactionService := services.NewTransactionService(accountRepo, transactionRepo, kafkaQueue)
 	transactionHandler := handlers.NewTransactionHandler(transactionService)
 	server.RegisterAPIRoutes(transactionHandler)
 	slog.Info(log_helper.LogServiceInitialized("transaction_System"))
+
+	slog.Info(log_color.Black("===================================="))
+	slog.Info(log_helper.LogServiceInitializing("kafka consumer"))
+	queue_processor.StartConsumer(transactionService, "localhost:9092", "transactions-topic", "transaction-processor")
+	slog.Info(log_helper.LogServiceInitialized("kafka consumer"))
 }
 
 func initGoose() {
