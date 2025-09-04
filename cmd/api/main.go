@@ -1,6 +1,7 @@
 package main
 
 import (
+	"AccountManagementSystem/env_helper"
 	"AccountManagementSystem/internal/handlers"
 	"AccountManagementSystem/internal/queue"
 	"AccountManagementSystem/internal/queue_processor"
@@ -62,7 +63,7 @@ func main() {
 
 	server.RegisterFiberRoutes()
 	initHandler(server)
-	initGoose()
+	//initGoose()
 	// Create a done channel to signal when the shutdown is complete
 	done := make(chan bool, 1)
 
@@ -85,7 +86,10 @@ func main() {
 func initHandler(server *server.FiberServer) {
 
 	slog.Info(log_helper.LogServiceInitializing("kafka producer"))
-	kafkaQueue, err := queue.NewKafkaQueue("localhost:9092", "transactions-topic")
+	kafkaBroker := env_helper.ReadString("KAFKA_BROKERS", "kafka:9092")
+	kafkaTopic := env_helper.ReadString("KAFKA_TOPIC", "transactions")
+	kafkaGroup := env_helper.ReadString("KAFKA_GROUP", "transaction-service")
+	kafkaQueue, err := queue.NewKafkaQueue(kafkaBroker, kafkaTopic)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -109,7 +113,7 @@ func initHandler(server *server.FiberServer) {
 
 	slog.Info(log_color.Black("===================================="))
 	slog.Info(log_helper.LogServiceInitializing("kafka consumer"))
-	queue_processor.StartConsumer(transactionService, "localhost:9092", "transactions-topic", "transaction-processor")
+	queue_processor.StartConsumer(transactionService, kafkaBroker, kafkaTopic, kafkaGroup)
 	slog.Info(log_helper.LogServiceInitialized("kafka consumer"))
 }
 

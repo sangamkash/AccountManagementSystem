@@ -52,6 +52,7 @@ func New() Service {
 	slog.Info(log_color.Blue(connStr))
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
+		slog.Error(log_color.Red(connStr))
 		log.Fatal(err)
 	}
 	slog.Info(log_color.Green("Connected to database"))

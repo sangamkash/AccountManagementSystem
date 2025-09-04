@@ -23,9 +23,15 @@ services:
       GOOSE_DBSTRING: postgres://${BLUEPRINT_DB_USERNAME}:${BLUEPRINT_DB_PASSWORD}@${BLUEPRINT_DB_HOST}:${BLUEPRINT_DB_PORT_DOCKER}/${BLUEPRINT_DB_DATABASE}
       GOOSE_MIGRATION_DIR: ./internal/database/migrations
       GOOSE_TABLE: goose_migrations
+      # 👇 IMPORTANT: use service name "kafka" not localhost
+      KAFKA_BROKERS: ${KAFKA_BROKERS}
+      KAFKA_TOPIC: ${KAFKA_TOPIC}
+      KAFKA_GROUP: ${KAFKA_GROUP}
     depends_on:
       psql_bp:
         condition: service_healthy
+      kafka:
+        condition: service_started
     networks:
       - blueprint
 
@@ -48,6 +54,33 @@ services:
       start_period: 15s
     networks:
       - blueprint
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - blueprint
+
+  kafka:
+      image: confluentinc/cp-kafka:7.5.0
+      restart: unless-stopped
+      depends_on:
+        - zookeeper
+      ports:
+        - "9092:9092"
+      environment:
+        KAFKA_BROKER_ID: 1
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+        KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      networks:
+        - blueprint
 
 volumes:
   psql_volume_bp:
