@@ -2,21 +2,22 @@ package queue
 
 import (
 	"AccountManagementSystem/internal/models"
+	"context"
 	"encoding/json"
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/segmentio/kafka-go"
 )
 
 type KafkaQueue struct {
-	producer *kafka.Producer
-	topic    string
+	writer *kafka.Writer
 }
 
 func NewKafkaQueue(broker, topic string) (*KafkaQueue, error) {
-	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": broker})
-	if err != nil {
-		return nil, err
+	writer := &kafka.Writer{
+		Addr:     kafka.TCP(broker),
+		Topic:    topic,
+		Balancer: &kafka.LeastBytes{},
 	}
-	return &KafkaQueue{producer: p, topic: topic}, nil
+	return &KafkaQueue{writer: writer}, nil
 }
 
 func (k *KafkaQueue) PublishMessage(msg models.TransactionMessage, key string) error {
@@ -24,9 +25,8 @@ func (k *KafkaQueue) PublishMessage(msg models.TransactionMessage, key string) e
 	if err != nil {
 		return err
 	}
-	return k.producer.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{Topic: &k.topic, Partition: kafka.PartitionAny},
-		Key:            []byte(key),
-		Value:          value,
-	}, nil)
+	return k.writer.WriteMessages(context.Background(), kafka.Message{
+		Key:   []byte(key),
+		Value: value,
+	})
 }

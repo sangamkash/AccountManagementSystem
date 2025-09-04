@@ -9,6 +9,9 @@ RUN go install github.com/pressly/goose/v3/cmd/goose@latest
 COPY go.mod go.sum ./
 RUN go mod download
 
+# Clean up and vendor dependencies
+RUN go mod tidy && go mod vendor
+
 COPY . .
 # Generate docs (simplified for Fiber)
 RUN swag init --generalInfo ./cmd/api/main.go --output ./docs

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	_ "AccountManagementSystem/docs"
+	_ "github.com/lib/pq" // <-- REQUIRED: registers "postgres" drive
 	//_ "AccountManagementSystem/internal/database/migrations" // 👈 import so migrations register
 	_ "github.com/joho/godotenv/autoload"
 )
