@@ -41,7 +41,10 @@ func (t TransactionHandler) Deposit(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&req); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-	return t.service.EnqueueDeposit(req.AccountId, req.Amount, req.IdempotencyKey)
+	if err := t.service.EnqueueDeposit(req.AccountId, req.Amount, req.IdempotencyKey); err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"message": "transaction enqueued successfully"})
 }
 
 // Withdraw godoc
@@ -60,7 +63,10 @@ func (t TransactionHandler) Withdraw(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&req); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-	return t.service.EnqueueDeposit(req.AccountId, req.Amount, req.IdempotencyKey)
+	if err := t.service.EnqueueWithdraw(req.AccountId, req.Amount, req.IdempotencyKey); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"message": "transaction enqueued successfully"})
 }
 
 // ListTransactions godoc

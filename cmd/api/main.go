@@ -63,7 +63,6 @@ func main() {
 
 	server.RegisterFiberRoutes()
 	initHandler(server)
-	//initGoose()
 	// Create a done channel to signal when the shutdown is complete
 	done := make(chan bool, 1)
 
