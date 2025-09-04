@@ -56,11 +56,12 @@ func gracefulShutdown(fiberServer *server.FiberServer, done chan bool) {
 // @description API for Account Management system
 func main() {
 
+	log_helper.LogServiceInitialized("main")
 	server := server.New()
 
 	server.RegisterFiberRoutes()
 	initHandler(server)
-	//initGoose()
+	initGoose()
 	// Create a done channel to signal when the shutdown is complete
 	done := make(chan bool, 1)
 
