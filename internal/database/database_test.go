@@ -1,8 +1,10 @@
 package database
 
 import (
+	"AccountManagementSystem/log_color"
 	"context"
 	"log"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -54,6 +56,7 @@ func mustStartPostgresContainer() (func(context.Context, ...testcontainers.Termi
 }
 
 func TestMain(m *testing.M) {
+	slog.Info(log_color.Yellow("running testMain"))
 	teardown, err := mustStartPostgresContainer()
 	if err != nil {
 		log.Fatalf("could not start postgres container: %v", err)
@@ -67,6 +70,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestNew(t *testing.T) {
+	slog.Info(log_color.Yellow("Testing DB service"))
 	srv := New()
 	if srv == nil {
 		t.Fatal("New() returned nil")
@@ -74,6 +78,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestHealth(t *testing.T) {
+	slog.Info(log_color.Yellow("Testing DB health"))
 	srv := New()
 
 	stats := srv.Health()
@@ -93,7 +98,7 @@ func TestHealth(t *testing.T) {
 
 func TestClose(t *testing.T) {
 	srv := New()
-
+	slog.Info(log_color.Yellow("Testing DB close"))
 	if srv.Close() != nil {
 		t.Fatalf("expected Close() to return nil")
 	}

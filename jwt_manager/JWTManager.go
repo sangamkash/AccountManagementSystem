@@ -1,4 +1,4 @@
-package JWTManager
+package jwt_manager
 
 import (
 	"fmt"

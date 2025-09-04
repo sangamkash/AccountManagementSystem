@@ -2,7 +2,7 @@ package services
 
 import (
 	"AccountManagementSystem/internal/models"
-	"AccountManagementSystem/internal/queue"
+	"AccountManagementSystem/internal/queue_producer"
 	"AccountManagementSystem/internal/repository"
 	"context"
 	"database/sql"
@@ -10,36 +10,44 @@ import (
 	"time"
 )
 
-var ErrInsufficient = errors.New("insufficient funds")
+var errInsufficient = errors.New("insufficient funds")
+var errInvalidValue = errors.New("invalid value")
+var errAlreadyProcessed = errors.New("already Processed")
 
 type TransactionService struct {
 	accRepo *repository.AccountRepo
 	txRepo  *repository.TransactionRepo
-	mq      *queue.KafkaQueue
+	mq      *queue_producer.KafkaQueue
 }
 
-func NewTransactionService(a *repository.AccountRepo, t *repository.TransactionRepo, kq *queue.KafkaQueue) *TransactionService {
+func NewTransactionService(a *repository.AccountRepo, t *repository.TransactionRepo, kq *queue_producer.KafkaQueue) *TransactionService {
 	return &TransactionService{accRepo: a, txRepo: t, mq: kq}
 }
 
-func (s *TransactionService) EnqueueDeposit(accountID int64, amount float64, key string) error {
+func (s *TransactionService) EnqueueDeposit(accountID int64, amount float64, idempotencyKey string) error {
+	if amount <= 0 {
+		return errInvalidValue
+	}
 	msg := models.TransactionMessage{
 		AccountID:      accountID,
 		Type:           "deposit",
 		Amount:         amount,
-		IdempotencyKey: key,
+		IdempotencyKey: idempotencyKey,
 	}
-	return s.mq.PublishMessage(msg, key) // Kafka publish
+	return s.mq.PublishMessage(msg, accountID) // Kafka publish
 }
 
-func (s *TransactionService) EnqueueWithdraw(accountID int64, amount float64, key string) error {
+func (s *TransactionService) EnqueueWithdraw(accountID int64, amount float64, idempotencyKey string) error {
+	if amount <= 0 {
+		return errInvalidValue
+	}
 	msg := models.TransactionMessage{
 		AccountID:      accountID,
 		Type:           "withdraw",
 		Amount:         amount,
-		IdempotencyKey: key,
+		IdempotencyKey: idempotencyKey,
 	}
-	return s.mq.PublishMessage(msg, key) // Kafka publish
+	return s.mq.PublishMessage(msg, accountID) // Kafka publish
 }
 
 func (s *TransactionService) List(accountID int64, limit int) ([]models.Transaction, error) {
@@ -61,7 +69,14 @@ func (s *TransactionService) ProcessMessage(ctx context.Context, msg models.Tran
 			tx.Rollback()
 		}
 	}()
-
+	//check Idempotency
+	idempotency, err := s.txRepo.CheckIdempotency(ctx, msg.IdempotencyKey)
+	if err != nil {
+		return err
+	}
+	if idempotency == true {
+		return errAlreadyProcessed
+	}
 	acc, getAccErr := s.accRepo.GetForUpdate(ctx, tx, msg.AccountID)
 	if getAccErr != nil {
 		return getAccErr
@@ -72,7 +87,7 @@ func (s *TransactionService) ProcessMessage(ctx context.Context, msg models.Tran
 		acc.Balance += msg.Amount
 	case "withdraw":
 		if acc.Balance < msg.Amount {
-			return ErrInsufficient
+			return errInsufficient
 		}
 		acc.Balance -= msg.Amount
 	default:
@@ -85,10 +100,11 @@ func (s *TransactionService) ProcessMessage(ctx context.Context, msg models.Tran
 
 	// insert transaction record
 	_, insertTranErr := s.txRepo.Insert(ctx, tx, models.Transaction{
-		AccountID: acc.ID,
-		Type:      msg.Type,
-		Amount:    msg.Amount,
-		CreatedAt: time.Now(),
+		AccountID:      acc.ID,
+		Type:           msg.Type,
+		Amount:         msg.Amount,
+		IdempotencyKey: msg.IdempotencyKey,
+		CreatedAt:      time.Now(),
 	})
 	if insertTranErr != nil {
 		return insertTranErr

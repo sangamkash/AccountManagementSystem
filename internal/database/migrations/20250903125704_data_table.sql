@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     account_id BIGINT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
     type VARCHAR(20) NOT NULL CHECK (type IN ('deposit','withdraw')),
     amount NUMERIC(20,4) NOT NULL CHECK (amount > 0),
+    idempotency_key VARCHAR(255) UNIQUE NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
 

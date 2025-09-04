@@ -3,8 +3,8 @@ package main
 import (
 	"AccountManagementSystem/env_helper"
 	"AccountManagementSystem/internal/handlers"
-	"AccountManagementSystem/internal/queue"
 	"AccountManagementSystem/internal/queue_processor"
+	"AccountManagementSystem/internal/queue_producer"
 	"AccountManagementSystem/internal/repository"
 	"AccountManagementSystem/internal/server"
 	"AccountManagementSystem/internal/services"
@@ -88,7 +88,7 @@ func initHandler(server *server.FiberServer) {
 	kafkaBroker := env_helper.ReadString("KAFKA_BROKERS", "kafka:9092")
 	kafkaTopic := env_helper.ReadString("KAFKA_TOPIC", "transactions")
 	kafkaGroup := env_helper.ReadString("KAFKA_GROUP", "transaction-service")
-	kafkaQueue, err := queue.NewKafkaQueue(kafkaBroker, kafkaTopic)
+	kafkaQueue, err := queue_producer.NewKafkaQueue(kafkaBroker, kafkaTopic)
 	if err != nil {
 		log.Fatal(err)
 	}
