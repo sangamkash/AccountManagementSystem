@@ -66,4 +66,9 @@ watch:
             fi; \
         fi
 
+docker_build_run:
+	@echo "Preparing docker container..."
+	docker-compose up --build
+
+
 .PHONY: all build run test clean watch docker-run docker-down itest

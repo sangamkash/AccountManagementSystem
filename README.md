@@ -6,7 +6,20 @@ One Paragraph of project description goes here
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
+## Requirements
+- Make sure you have docket installed 
+
+## API documentation
+After running it in docker open this link for API documentation 
+http://127.0.0.1:8080/swagger/index.html
+
+
 ## MakeFile
+
+To run in docker 
+```bash
+make docker_build_run
+```
 
 Run build make command with tests
 ```bash
